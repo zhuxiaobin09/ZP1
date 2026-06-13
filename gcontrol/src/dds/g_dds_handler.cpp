@@ -14,6 +14,10 @@ namespace {
 constexpr const char* kTopicName = "GControlTopic";
 constexpr auto kPublishInterval = std::chrono::seconds(1);
 
+/**
+ * @brief 获取当前系统时间的毫秒级 Unix 时间戳。
+ * @return int64_t 自 epoch 起的毫秒数。
+ */
 int64_t CurrentTimestampMs() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::system_clock::now().time_since_epoch())
@@ -22,15 +26,25 @@ int64_t CurrentTimestampMs() {
 
 }  // namespace
 
+/**
+ * @brief 获取 GDDSHandler 单例实例。
+ * @return GDDSHandler& 全局唯一实例的引用。
+ */
 GDDSHandler& GDDSHandler::GetInstance() {
   static GDDSHandler instance;
   return instance;
 }
 
+/**
+ * @brief 析构时停止 DDS 发布线程，释放资源。
+ */
 GDDSHandler::~GDDSHandler() {
   Stop();
 }
 
+/**
+ * @brief 启动后台线程，周期性向 DDS Topic 发布消息。
+ */
 void GDDSHandler::Start() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (running_) {
@@ -42,6 +56,9 @@ void GDDSHandler::Start() {
   LOG_INFO("GDDSHandler started");
 }
 
+/**
+ * @brief 停止发布循环并等待后台线程退出。
+ */
 void GDDSHandler::Stop() {
   std::thread worker;
   {
@@ -59,6 +76,9 @@ void GDDSHandler::Stop() {
   LOG_INFO("GDDSHandler stopped");
 }
 
+/**
+ * @brief DDS 发布主循环，创建 Writer 并每秒发送一条 GControlMessage。
+ */
 void GDDSHandler::RunLoop() {
   ::dds::domain::DomainParticipant participant(0);
   ::dds::pub::Publisher publisher(participant);

@@ -15,15 +15,25 @@ constexpr auto kPollInterval = std::chrono::milliseconds(100);
 
 }  // namespace
 
+/**
+ * @brief 获取 HDDSHandler 单例实例。
+ * @return HDDSHandler& 全局唯一实例的引用。
+ */
 HDDSHandler& HDDSHandler::GetInstance() {
   static HDDSHandler instance;
   return instance;
 }
 
+/**
+ * @brief 析构时停止 DDS 订阅线程，释放资源。
+ */
 HDDSHandler::~HDDSHandler() {
   Stop();
 }
 
+/**
+ * @brief 启动后台线程，周期性从 DDS Topic 读取消息。
+ */
 void HDDSHandler::Start() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (running_) {
@@ -35,6 +45,9 @@ void HDDSHandler::Start() {
   LOG_INFO("HDDSHandler started");
 }
 
+/**
+ * @brief 停止订阅循环并等待后台线程退出。
+ */
 void HDDSHandler::Stop() {
   std::thread worker;
   {
@@ -52,6 +65,9 @@ void HDDSHandler::Stop() {
   LOG_INFO("HDDSHandler stopped");
 }
 
+/**
+ * @brief DDS 订阅主循环，创建 Reader 并轮询接收 GControlMessage。
+ */
 void HDDSHandler::RunLoop() {
   ::dds::domain::DomainParticipant participant(0);
   ::dds::sub::Subscriber subscriber(participant);
