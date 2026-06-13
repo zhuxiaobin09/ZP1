@@ -1,5 +1,5 @@
-#ifndef LOGSYSTEM_INCLUDE_LOGSYSTEM_LOGGER_H_
-#define LOGSYSTEM_INCLUDE_LOGSYSTEM_LOGGER_H_
+#ifndef LOGSYSTEM_LOGGER_H_
+#define LOGSYSTEM_LOGGER_H_
 
 #include <format>
 #include <fstream>
@@ -69,4 +69,4 @@ class Logger {
   ::logsystem::Logger::GetInstance().Error( \
       std::format(__VA_ARGS__), std::source_location::current())
 
-#endif  // LOGSYSTEM_INCLUDE_LOGSYSTEM_LOGGER_H_
+#endif  // LOGSYSTEM_LOGGER_H_
