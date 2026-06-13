@@ -30,7 +30,6 @@ class GHttpHandler {
   ~GHttpHandler();
 
   void RunServer();
-  void RegisterRoutes();
 
   std::mutex mutex_;
   std::thread thread_;

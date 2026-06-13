@@ -1,5 +1,6 @@
 #include "http/g_http_handler.h"
 
+#include "http/g_http_router.h"
 #include "logsystem/logger.h"
 
 #include <httplib.h>
@@ -70,24 +71,6 @@ void GHttpHandler::Stop() {
 }
 
 /**
- * @brief 注册 HTTP 路由与请求日志回调。
- */
-void GHttpHandler::RegisterRoutes() {
-  server_->set_logger([](const httplib::Request& req,
-                         const httplib::Response& res) {
-    LOG_INFO("HTTP {} {} -> {}", req.method, req.path, res.status);
-    if (!req.body.empty()) {
-      LOG_INFO("HTTP body: {}", req.body);
-    }
-  });
-
-  server_->Get("/health", [](const httplib::Request& /*req*/,
-                             httplib::Response& res) {
-    res.set_content(R"({"status":"ok"})", "application/json");
-  });
-}
-
-/**
  * @brief 创建 httplib 服务器、注册路由并阻塞监听。
  */
 void GHttpHandler::RunServer() {
@@ -97,7 +80,7 @@ void GHttpHandler::RunServer() {
   }();
 
   server_ = std::make_unique<httplib::Server>();
-  RegisterRoutes();
+  RegisterAllRoutes(*server_);
 
   if (!server_->listen("0.0.0.0", port)) {
     LOG_ERROR("HTTP server failed to listen on port {}", port);

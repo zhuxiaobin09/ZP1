@@ -8,7 +8,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpp_httplib)
 
-add_library(gcontrol_http g_http_handler.cpp)
+add_library(gcontrol_http
+    g_http_handler.cpp
+    g_http_router.cpp
+    routes/config_file_util.cpp
+    routes/gcontrol_config_route.cpp
+    routes/host_config_route.cpp
+    routes/log_config_route.cpp
+)
 add_library(gcontrol::http ALIAS gcontrol_http)
 
 target_include_directories(gcontrol_http
