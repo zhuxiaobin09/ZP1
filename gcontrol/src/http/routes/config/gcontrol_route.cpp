@@ -1,12 +1,13 @@
-#include "http/routes/gcontrol_config_route.h"
+#include "http/routes/config/gcontrol_route.h"
 
-#include "http/routes/config_file_util.h"
+#include "http/common/config_file_util.h"
 
 #include <httplib.h>
 
 namespace gcontrol {
 namespace http {
 namespace routes {
+namespace config {
 namespace {
 
 constexpr const char* kGetPath = "/config/gcontrol";
@@ -18,7 +19,7 @@ constexpr const char* kConfigRelativePath = "gcontrol_config/gcontrol.json";
  * @return std::filesystem::path 配置文件完整路径。
  */
 std::filesystem::path GcontrolConfigPath() {
-  return GetUserdataRoot() / kConfigRelativePath;
+  return common::GetUserdataRoot() / kConfigRelativePath;
 }
 
 }  // namespace
@@ -27,18 +28,19 @@ std::filesystem::path GcontrolConfigPath() {
  * @brief 注册 gcontrol 配置文件读写 HTTP 路由。
  * @param server 待注册路由的服务器实例。
  */
-void RegisterGcontrolConfigRoutes(httplib::Server& server) {
+void RegisterConfigGcontrolRoutes(httplib::Server& server) {
   server.Get(kGetPath, [](const httplib::Request& /*req*/,
                           httplib::Response& res) {
-    SendConfigFile(res, GcontrolConfigPath());
+    common::SendConfigFile(res, GcontrolConfigPath());
   });
 
   server.Put(kPutPath, [](const httplib::Request& req,
                           httplib::Response& res) {
-    UpdateConfigFile(req, res, GcontrolConfigPath());
+    common::UpdateConfigFile(req, res, GcontrolConfigPath());
   });
 }
 
+}  // namespace config
 }  // namespace routes
 }  // namespace http
 }  // namespace gcontrol

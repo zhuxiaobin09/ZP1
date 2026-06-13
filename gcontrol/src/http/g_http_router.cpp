@@ -1,8 +1,6 @@
 #include "http/g_http_router.h"
 
-#include "http/routes/gcontrol_config_route.h"
-#include "http/routes/host_config_route.h"
-#include "http/routes/log_config_route.h"
+#include "http/routes/route_registry.h"
 #include "logsystem/logger.h"
 
 #include <httplib.h>
@@ -34,10 +32,7 @@ void SetupRequestLogging(httplib::Server& server) {
 void RegisterAllRoutes(httplib::Server& server) {
   SetupRequestLogging(server);
 
-  routes::RegisterGcontrolConfigRoutes(server);
-  routes::RegisterHostConfigRoutes(server);
-  routes::RegisterLogConfigRoutes(server);
-  // 新增 HTTP 接口时，在此追加对应的 RegisterXxxRoutes(server) 调用。
+  routes::RegisterRouteModules(server);
 }
 
 }  // namespace http

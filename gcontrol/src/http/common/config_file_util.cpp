@@ -1,4 +1,4 @@
-#include "http/routes/config_file_util.h"
+#include "http/common/config_file_util.h"
 
 #include "logsystem/logger.h"
 
@@ -11,7 +11,7 @@
 
 namespace gcontrol {
 namespace http {
-namespace routes {
+namespace common {
 namespace {
 
 std::mutex config_mutex;
@@ -120,6 +120,6 @@ void UpdateConfigFile(const httplib::Request& req, httplib::Response& res,
   res.set_content(R"({"status":"ok"})", "application/json");
 }
 
-}  // namespace routes
+}  // namespace common
 }  // namespace http
 }  // namespace gcontrol

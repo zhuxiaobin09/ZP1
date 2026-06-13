@@ -1,5 +1,5 @@
-#ifndef GCONTROL_SRC_HTTP_ROUTES_LOG_CONFIG_ROUTE_H_
-#define GCONTROL_SRC_HTTP_ROUTES_LOG_CONFIG_ROUTE_H_
+#ifndef GCONTROL_SRC_HTTP_ROUTES_CONFIG_LOG_ROUTE_H_
+#define GCONTROL_SRC_HTTP_ROUTES_CONFIG_LOG_ROUTE_H_
 
 namespace httplib {
 class Server;
@@ -8,15 +8,17 @@ class Server;
 namespace gcontrol {
 namespace http {
 namespace routes {
+namespace config {
 
 /**
  * @brief 注册 log 配置文件读写 HTTP 路由。
  * @param server 待注册路由的服务器实例。
  */
-void RegisterLogConfigRoutes(httplib::Server& server);
+void RegisterConfigLogRoutes(httplib::Server& server);
 
+}  // namespace config
 }  // namespace routes
 }  // namespace http
 }  // namespace gcontrol
 
-#endif  // GCONTROL_SRC_HTTP_ROUTES_LOG_CONFIG_ROUTE_H_
+#endif  // GCONTROL_SRC_HTTP_ROUTES_CONFIG_LOG_ROUTE_H_

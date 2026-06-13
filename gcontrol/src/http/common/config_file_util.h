@@ -1,5 +1,5 @@
-#ifndef GCONTROL_SRC_HTTP_ROUTES_CONFIG_FILE_UTIL_H_
-#define GCONTROL_SRC_HTTP_ROUTES_CONFIG_FILE_UTIL_H_
+#ifndef GCONTROL_SRC_HTTP_COMMON_CONFIG_FILE_UTIL_H_
+#define GCONTROL_SRC_HTTP_COMMON_CONFIG_FILE_UTIL_H_
 
 #include <filesystem>
 #include <optional>
@@ -12,7 +12,7 @@ class Response;
 
 namespace gcontrol {
 namespace http {
-namespace routes {
+namespace common {
 
 /**
  * @brief 获取 userdata 根目录路径。
@@ -55,8 +55,8 @@ void SendConfigFile(httplib::Response& res,
 void UpdateConfigFile(const httplib::Request& req, httplib::Response& res,
                       const std::filesystem::path& path);
 
-}  // namespace routes
+}  // namespace common
 }  // namespace http
 }  // namespace gcontrol
 
-#endif  // GCONTROL_SRC_HTTP_ROUTES_CONFIG_FILE_UTIL_H_
+#endif  // GCONTROL_SRC_HTTP_COMMON_CONFIG_FILE_UTIL_H_

@@ -1,12 +1,13 @@
-#include "http/routes/log_config_route.h"
+#include "http/routes/config/log_route.h"
 
-#include "http/routes/config_file_util.h"
+#include "http/common/config_file_util.h"
 
 #include <httplib.h>
 
 namespace gcontrol {
 namespace http {
 namespace routes {
+namespace config {
 namespace {
 
 constexpr const char* kGetPath = "/config/log";
@@ -18,7 +19,7 @@ constexpr const char* kConfigRelativePath = "log_config/log.json";
  * @return std::filesystem::path 配置文件完整路径。
  */
 std::filesystem::path LogConfigPath() {
-  return GetUserdataRoot() / kConfigRelativePath;
+  return common::GetUserdataRoot() / kConfigRelativePath;
 }
 
 }  // namespace
@@ -27,18 +28,19 @@ std::filesystem::path LogConfigPath() {
  * @brief 注册 log 配置文件读写 HTTP 路由。
  * @param server 待注册路由的服务器实例。
  */
-void RegisterLogConfigRoutes(httplib::Server& server) {
+void RegisterConfigLogRoutes(httplib::Server& server) {
   server.Get(kGetPath, [](const httplib::Request& /*req*/,
                           httplib::Response& res) {
-    SendConfigFile(res, LogConfigPath());
+    common::SendConfigFile(res, LogConfigPath());
   });
 
   server.Put(kPutPath, [](const httplib::Request& req,
                           httplib::Response& res) {
-    UpdateConfigFile(req, res, LogConfigPath());
+    common::UpdateConfigFile(req, res, LogConfigPath());
   });
 }
 
+}  // namespace config
 }  // namespace routes
 }  // namespace http
 }  // namespace gcontrol
