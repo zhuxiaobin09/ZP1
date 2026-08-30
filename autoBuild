@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# ZP1 自动编译脚本：支持自定义版本号，产物输出到 output/<version>/
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${SCRIPT_DIR}"
+BUILD_DIR="${PROJECT_ROOT}/build"
+OUTPUT_DIR="${PROJECT_ROOT}/output"
+DEFAULT_VERSION="0.1.0"
+JOBS="$(nproc 2>/dev/null || echo 4)"
+CLEAN_BUILD=0
+VERSION=""
+INTERACTIVE=0
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Options:
+  -v, --version VERSION   指定版本号（默认: ${DEFAULT_VERSION}）
+  -i, --interactive       交互式输入版本号
+  -j, --jobs N            并行编译线程数（默认: ${JOBS}）
+  -c, --clean             清理 build 目录后重新编译
+  -h, --help              显示帮助
+
+示例:
+  $(basename "$0")                    # 使用默认版本 ${DEFAULT_VERSION}
+  $(basename "$0") -v 1.0.0           # 指定版本 1.0.0
+  $(basename "$0") -i                 # 交互输入版本号
+  $(basename "$0") -c -v 2.0.0 -j 8   # 清理后编译
+EOF
+}
+
+read_default_version() {
+  if [[ -f "${PROJECT_ROOT}/CMakeLists.txt" ]]; then
+    local parsed
+    parsed="$(grep -E 'set\(ZP1_VERSION "' "${PROJECT_ROOT}/CMakeLists.txt" \
+      | sed -E 's/.*set\(ZP1_VERSION "([0-9]+\.[0-9]+\.[0-9]+)".*/\1/' \
+      | head -n 1 || true)"
+    if [[ "${parsed}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      DEFAULT_VERSION="${parsed}"
+    fi
+  fi
+}
+
+validate_version() {
+  if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "错误: 版本号格式无效 '${VERSION}'，请使用 x.y.z 格式" >&2
+    exit 1
+  fi
+}
+
+prompt_version() {
+  read -rp "请输入版本号 [${DEFAULT_VERSION}]: " input
+  if [[ -z "${input}" ]]; then
+    VERSION="${DEFAULT_VERSION}"
+  else
+    VERSION="${input}"
+  fi
+  validate_version
+}
+
+parse_args() {
+  if [[ $# -eq 0 ]]; then
+    VERSION="${DEFAULT_VERSION}"
+    return
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -v|--version)
+        [[ $# -ge 2 ]] || {
+          echo "错误: $1 需要版本号参数" >&2
+          exit 1
+        }
+        VERSION="$2"
+        shift 2
+        ;;
+      -i|--interactive)
+        INTERACTIVE=1
+        shift
+        ;;
+      -j|--jobs)
+        [[ $# -ge 2 ]] || {
+          echo "错误: $1 需要线程数参数" >&2
+          exit 1
+        }
+        JOBS="$2"
+        shift 2
+        ;;
+      -c|--clean)
+        CLEAN_BUILD=1
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        echo "错误: 未知参数 '$1'" >&2
+        usage
+        exit 1
+        ;;
+    esac
+  done
+
+  if [[ "${INTERACTIVE}" -eq 1 ]]; then
+    prompt_version
+  elif [[ -z "${VERSION}" ]]; then
+    VERSION="${DEFAULT_VERSION}"
+  else
+    validate_version
+  fi
+}
+
+configure_and_build() {
+  if [[ "${CLEAN_BUILD}" -eq 1 && -d "${BUILD_DIR}" ]]; then
+    echo "==> 清理 build 目录"
+    rm -rf "${BUILD_DIR}"
+  fi
+
+  echo "==> 配置 CMake (版本: ${VERSION})"
+  cmake -S "${PROJECT_ROOT}" -B "${BUILD_DIR}" \
+    -DZP1_VERSION="${VERSION}" \
+    -DZP1_BUILD_GCONTROL=ON \
+    -DZP1_BUILD_HOST=ON
+
+  echo "==> 编译 (${JOBS} 线程)"
+  cmake --build "${BUILD_DIR}" -j "${JOBS}"
+}
+
+collect_outputs() {
+  local version_output_dir="${OUTPUT_DIR}/${VERSION}"
+  mkdir -p "${version_output_dir}"
+
+  local -a executables=(
+    "gcontrol/src/gcontrol"
+    "host/src/host"
+  )
+
+  local copied=0
+  for rel_path in "${executables[@]}"; do
+    local src="${BUILD_DIR}/${rel_path}"
+    local name
+    name="$(basename "${rel_path}")"
+    if [[ -f "${src}" ]]; then
+      cp -f "${src}" "${version_output_dir}/${name}"
+      chmod +x "${version_output_dir}/${name}"
+      echo "  ${name} -> ${version_output_dir}/${name}"
+      copied=$((copied + 1))
+    else
+      echo "警告: 未找到 ${src}，跳过" >&2
+    fi
+  done
+
+  echo "${VERSION}" > "${version_output_dir}/version.txt"
+  date '+%Y-%m-%d %H:%M:%S' > "${version_output_dir}/build_time.txt"
+
+  if [[ "${copied}" -eq 0 ]]; then
+    echo "错误: 没有可执行文件被复制到 output" >&2
+    exit 1
+  fi
+
+  echo "==> 输出目录: ${version_output_dir} (${copied} 个可执行文件)"
+}
+
+main() {
+  read_default_version
+  parse_args "$@"
+
+  echo "==> ZP1 编译开始"
+  echo "    项目目录: ${PROJECT_ROOT}"
+  echo "    版本号:   ${VERSION}"
+
+  configure_and_build
+
+  echo "==> 收集产物到 output/"
+  collect_outputs
+
+  echo "==> 编译完成"
+}
+
+main "$@"

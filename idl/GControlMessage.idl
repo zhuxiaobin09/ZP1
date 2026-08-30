@@ -1,0 +1,10 @@
+module zp1 {
+  module msg {
+    @extensibility(FINAL)
+    struct GControlMessage {
+      int32 seq_id;
+      string content;
+      int64 timestamp_ms;
+    };
+  };
+};
